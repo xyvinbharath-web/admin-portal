@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useAuthGuard, useAuthActions } from "../../hooks/useAuth";
-import { LayoutDashboard, Users, Ticket, Bell, Settings, CreditCard, CalendarRange, GraduationCap, HandCoins, Gift, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, Ticket, Bell, Settings, CreditCard, CalendarRange, GraduationCap, HandCoins, Gift, ClipboardList, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/partners", label: "Partners", icon: Users },
+  { href: "/admin/analytics/partners", label: "Analytics", icon: BarChart3 },
   { href: "/admin/courses", label: "Courses", icon: GraduationCap },
   { href: "/admin/events", label: "Events", icon: CalendarRange },
   { href: "/admin/bookings", label: "Bookings", icon: ClipboardList },
