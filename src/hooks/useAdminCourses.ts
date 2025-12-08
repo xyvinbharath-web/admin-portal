@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { PaginatedResponse } from "@/types/admin";
 import { getAdminCourses, type CourseAdmin, type CoursesQueryParams } from "@/services/admin/courses";
 
@@ -20,7 +20,8 @@ export function useAdminCourses(initial: CoursesQueryParams = { page: 1, limit: 
   const { data, isLoading, isError, refetch } = useQuery<PaginatedResponse<CourseAdmin>>({
     queryKey: ["admin", "courses", query],
     queryFn: () => getAdminCourses(query),
-    keepPreviousData: true,
+    // React Query v5: use placeholderData helper instead of keepPreviousData
+    placeholderData: keepPreviousData,
   });
 
   function setQuery(updater: (prev: CoursesQueryParams) => CoursesQueryParams) {
