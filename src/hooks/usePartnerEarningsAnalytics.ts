@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   getPartnerEarningsAnalytics,
   type PaginatedPartnerEarnings,
@@ -22,10 +22,11 @@ export function usePartnerEarningsAnalytics(
 ): UsePartnerEarningsResult {
   const [query, setQueryState] = useState<PartnerEarningsQuery>(initial);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery<PaginatedPartnerEarnings>({
     queryKey: ["admin", "analytics", "partners-earnings", query],
     queryFn: () => getPartnerEarningsAnalytics(query),
-    keepPreviousData: true,
+    // React Query v5: use placeholderData helper instead of keepPreviousData
+    placeholderData: keepPreviousData,
   });
 
   function setQuery(
