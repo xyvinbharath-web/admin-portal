@@ -14,13 +14,22 @@ apiClient.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = window.localStorage.getItem("admin_token");
     if (token) {
-      // eslint-disable-next-line no-param-reassign
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      // Cast to any to avoid strict Axios v1 header typings blocking header mutation
+      const cfg: any = config;
+      if (!cfg.headers) {
+        cfg.headers = {};
+      }
+
+      if (typeof cfg.headers.set === "function") {
+        cfg.headers.set("Authorization", `Bearer ${token}`);
+      } else {
+        cfg.headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      return cfg;
     }
   }
+
   return config;
 });
 
