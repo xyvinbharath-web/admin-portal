@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { PaginatedResponse, UserAdmin } from "@/types/admin";
 import { getAdminUsers, type UsersQueryParams } from "@/services/admin/users";
 
@@ -17,10 +17,11 @@ interface UseAdminUsersResult {
 export function useAdminUsers(initial: UsersQueryParams = { page: 1, limit: 10 }) : UseAdminUsersResult {
   const [query, setQueryState] = useState<UsersQueryParams>(initial);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery<PaginatedResponse<UserAdmin>>({
     queryKey: ["admin", "users", query],
     queryFn: () => getAdminUsers(query),
-    keepPreviousData: true,
+    // React Query v5: use placeholderData helper instead of keepPreviousData
+    placeholderData: keepPreviousData,
   });
 
   function setQuery(updater: (prev: UsersQueryParams) => UsersQueryParams) {
