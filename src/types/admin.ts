@@ -36,6 +36,13 @@ export interface UserAdmin {
   };
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalPages: number;
+  totalRecords: number;
+}
+
 export interface PaginatedResponse<T> extends PaginationMeta {
   records: T[];
 }
