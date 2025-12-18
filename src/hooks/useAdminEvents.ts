@@ -12,6 +12,9 @@ export function useAdminEvents(initialQuery?: AdminEventsQuery) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-events", query],
     queryFn: () => getAdminEvents(query),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   return {

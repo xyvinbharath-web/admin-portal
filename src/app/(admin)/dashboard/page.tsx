@@ -76,10 +76,18 @@ export default function DashboardPage() {
       </div>
 
       <Card className="rounded-2xl border bg-white">
-        <CardContent className="p-4">
-          <h2 className="mb-2 text-sm font-medium text-slate-700">
-            Monthly Users & Revenue
-          </h2>
+        <CardContent className="space-y-3 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Growth overview</h2>
+              <p className="text-[11px] text-slate-500">Monthly trend of new users and revenue.</p>
+            </div>
+            <div className="hidden items-center gap-1 rounded-full bg-slate-50 p-1 text-[10px] font-medium text-slate-500 md:flex">
+              <button className="rounded-full bg-white px-2 py-0.5 text-slate-900 shadow-xs">M</button>
+              <button className="rounded-full px-2 py-0.5 hover:bg-white">Q</button>
+              <button className="rounded-full px-2 py-0.5 hover:bg-white">Y</button>
+            </div>
+          </div>
           <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlyData} margin={{ left: -20, right: 10 }}>
@@ -89,14 +97,14 @@ export default function DashboardPage() {
                 <Line
                   type="monotone"
                   dataKey="users"
-                  stroke="#6366f1"
+                  stroke="#2563eb"
                   strokeWidth={2}
                   dot={false}
                 />
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#22c55e"
+                  stroke="#f97373"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -107,7 +115,7 @@ export default function DashboardPage() {
       </Card>
 
       {isLoading && (
-        <p className="text-sm text-slate-500">Loading dashboard...</p>
+        <p className="text-xs text-slate-500">Loading dashboard...</p>
       )}
     </div>
   );

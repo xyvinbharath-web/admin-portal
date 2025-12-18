@@ -4,16 +4,28 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { DataTable } from "@/components/admin/DataTable";
-import { RoleEnum, StatusEnum } from "@/types/admin";
+import { RoleEnum, StatusEnum, MembershipTierEnum } from "@/types/admin";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ToastProvider } from "@/components/ui/Toast";
+import { ToastProvider, emitToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
+import { useCreateAdminUser } from "@/hooks/useCreateAdminUser";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function PartnersPage() {
   const router = useRouter();
   const { data, isLoading, query, setQuery } = useAdminUsers({ page: 1, limit: 10 });
   const [search, setSearch] = useState(query.q ?? "");
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createEmail, setCreateEmail] = useState("");
+  const [createPhone, setCreatePhone] = useState("");
+  const [createRole, setCreateRole] = useState<RoleEnum>("partner");
+  const [createStatus, setCreateStatus] = useState<StatusEnum | "">("active");
+  const [createTier, setCreateTier] = useState<MembershipTierEnum>("free");
+
+  const createUserMutation = useCreateAdminUser();
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -47,6 +59,32 @@ export default function PartnersPage() {
       }
     : undefined;
 
+  async function handleCreateSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!createName.trim()) return;
+
+    try {
+      await createUserMutation.mutateAsync({
+        name: createName.trim(),
+        email: createEmail.trim() || undefined,
+        phone: createPhone.trim() || undefined,
+        role: createRole,
+        status: (createStatus || undefined) as StatusEnum | undefined,
+        membershipTier: createTier,
+      });
+      setCreateOpen(false);
+      setCreateName("");
+      setCreateEmail("");
+      setCreatePhone("");
+      setCreateRole("partner");
+      setCreateStatus("active");
+      setCreateTier("free");
+      emitToast("Partner created", "success");
+    } catch (err) {
+      emitToast("Failed to create partner", "error");
+    }
+  }
+
   const filteredRecords = (data?.records ?? []).filter((user: any) => {
     if (query.role) {
       return user.role === query.role;
@@ -65,6 +103,9 @@ export default function PartnersPage() {
               Manage partners and partnership requests.
             </p>
           </div>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            Create partner
+          </Button>
         </div>
 
         <Card className="rounded-2xl border bg-white">
@@ -112,15 +153,27 @@ export default function PartnersPage() {
               No partners found. Try adjusting your search or filters.
             </div>
           ) : (
-            filteredRecords.map((u: any) => (
+            filteredRecords.map((u: any) => {
+              const initials = (u.name?.[0] || u.email?.[0] || "P").toUpperCase();
+              return (
               <div
                 key={u._id}
                 className="rounded-xl border bg-white p-3 text-xs shadow-sm"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-sm font-medium text-slate-900">{u.name}</div>
-                    <div className="text-[11px] text-slate-500">{u.email}</div>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      {u.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={u.avatar} alt={u.name} className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <AvatarFallback className="text-[11px] font-semibold">{initials}</AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">{u.name}</div>
+                      <div className="text-[11px] text-slate-500">{u.email}</div>
+                    </div>
                   </div>
                   <Button
                     variant="outline"
@@ -165,7 +218,8 @@ export default function PartnersPage() {
                   <span>Rewards: {u.rewards ?? 0}</span>
                 </div>
               </div>
-            ))
+            );
+          })
           )}
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
@@ -200,7 +254,39 @@ export default function PartnersPage() {
         <div className="hidden md:block">
           <DataTable
             columns={[
-              { key: "name", header: "Partner" },
+              {
+                key: "name",
+                header: "Partner",
+                render: (u: any) => {
+                  const initials = (u.name?.[0] || u.email?.[0] || "P").toUpperCase();
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/admin/partners/${u._id}`)}
+                      className="flex w-full items-center gap-3 text-left hover:opacity-90"
+                    >
+                      <Avatar className="h-8 w-8">
+                        {u.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={u.avatar}
+                            alt={u.name}
+                            className="h-8 w-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <AvatarFallback className="text-[11px] font-semibold">
+                            {initials}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-slate-900">{u.name}</span>
+                        <span className="text-xs text-slate-500">{u.email}</span>
+                      </div>
+                    </button>
+                  );
+                },
+              },
               { key: "phone", header: "Phone" },
               { key: "role", header: "Type" },
               { key: "status", header: "Status" },
@@ -233,6 +319,94 @@ export default function PartnersPage() {
             emptyDescription="Try adjusting your search or filters."
           />
         </div>
+        {createOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-lg">
+              <h2 className="text-sm font-semibold text-slate-900">Create partner</h2>
+              <p className="mb-4 mt-1 text-xs text-slate-500">
+                Create a new partner or partner request account from the admin panel.
+              </p>
+              <form className="space-y-3" onSubmit={handleCreateSubmit}>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700">Name</label>
+                  <input
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    value={createName}
+                    onChange={(e) => setCreateName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700">Email</label>
+                  <input
+                    type="email"
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    value={createEmail}
+                    onChange={(e) => setCreateEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700">Phone</label>
+                  <input
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    value={createPhone}
+                    onChange={(e) => setCreatePhone(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-slate-700">Type</label>
+                    <select
+                      className="w-full rounded-md border px-2 py-2 text-xs"
+                      value={createRole}
+                      onChange={(e) => setCreateRole(e.target.value as RoleEnum)}
+                    >
+                      <option value="partner">Partner</option>
+                      <option value="partner_request">Partner request</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-slate-700">Status</label>
+                    <select
+                      className="w-full rounded-md border px-2 py-2 text-xs"
+                      value={createStatus}
+                      onChange={(e) => setCreateStatus(e.target.value as StatusEnum | "")}
+                    >
+                      <option value="active">Active</option>
+                      <option value="pending">Pending</option>
+                      <option value="suspended">Suspended</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-slate-700">Membership</label>
+                    <select
+                      className="w-full rounded-md border px-2 py-2 text-xs"
+                      value={createTier}
+                      onChange={(e) => setCreateTier(e.target.value as MembershipTierEnum)}
+                    >
+                      <option value="free">Free</option>
+                      <option value="gold">Gold</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCreateOpen(false)}
+                    disabled={createUserMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" disabled={createUserMutation.isPending}>
+                    {createUserMutation.isPending ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </ToastProvider>
   );

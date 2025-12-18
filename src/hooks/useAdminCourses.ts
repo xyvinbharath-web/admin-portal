@@ -22,6 +22,9 @@ export function useAdminCourses(initial: CoursesQueryParams = { page: 1, limit: 
     queryFn: () => getAdminCourses(query),
     // React Query v5: use placeholderData helper instead of keepPreviousData
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   function setQuery(updater: (prev: CoursesQueryParams) => CoursesQueryParams) {

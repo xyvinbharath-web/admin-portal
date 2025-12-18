@@ -21,10 +21,12 @@ export default function AdminPartnerDetailPage() {
     updateRole,
     updateStatus,
     updateMembership,
+    updateProfile,
     deleteUser,
     rolePending,
     statusPending,
     membershipPending,
+    profilePending,
     deletePending,
   } = useAdminUser(typeof id === "string" ? id : undefined);
 
@@ -104,6 +106,8 @@ export default function AdminPartnerDetailPage() {
             rolePending={rolePending}
             statusPending={statusPending}
             membershipPending={membershipPending}
+            onUpdateProfile={updateProfile}
+            profilePending={profilePending}
           />
         )}
 

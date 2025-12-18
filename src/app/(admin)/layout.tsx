@@ -31,14 +31,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuthActions();
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      <aside className="flex w-64 flex-col bg-slate-950 text-slate-100">
-        <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-sm font-bold">
+    <div className="flex min-h-screen bg-slate-50">
+      <aside className="flex w-64 flex-col border-r border-slate-200 bg-white/90 backdrop-blur">
+        <div className="flex h-16 items-center gap-3 border-b border-slate-100 px-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white">
             IC
           </div>
           <div>
-            <div className="text-sm font-semibold">Impact Club</div>
+            <div className="text-sm font-semibold text-slate-900">Impact Club</div>
             <div className="text-xs text-slate-400">Admin Panel</div>
           </div>
         </div>
@@ -49,10 +49,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             return (
               <Link key={item.href} href={item.href}>
                 <div
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-colors ${
+                  className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                     active
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -62,11 +62,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="border-t border-slate-800 p-3">
+        <div className="border-t border-slate-100 p-3">
           <Button
             variant="outline"
             size="sm"
-            className="w-full border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+            className="w-full justify-center rounded-full border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
             onClick={logout}
           >
             Logout
@@ -74,29 +74,29 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b bg-white px-6">
+        <header className="flex h-16 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur">
           <div>
-            <h1 className="text-lg font-semibold">Dashboard</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
             <p className="text-xs text-slate-500">
               Welcome back! Here&apos;s what&apos;s happening with your business today.
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden rounded-full border bg-slate-50 px-3 py-1 text-xs text-slate-500 md:block">
+            <div className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500 md:block">
               Search...
             </div>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-slate-50 text-slate-600"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs"
             >
               <Bell className="h-4 w-4" />
             </button>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-300 text-xs font-semibold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
               AD
             </div>
           </div>
         </header>
-        <main className="flex-1 bg-slate-100 p-6">{children}</main>
+        <main className="flex-1 bg-slate-50 px-8 py-6">{children}</main>
       </div>
     </div>
   );

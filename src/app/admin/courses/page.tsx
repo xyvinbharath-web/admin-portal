@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAdminCourses } from "@/hooks/useAdminCourses";
 import { updateAdminCourse, deleteAdminCourse, type CourseAdmin } from "@/services/admin/courses";
+import { useCreateAdminCourse } from "@/hooks/useCreateAdminCourse";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 export default function CoursesPage() {
@@ -18,6 +19,15 @@ export default function CoursesPage() {
   const [publishFilter, setPublishFilter] = useState<string>("");
   const [priceFilter, setPriceFilter] = useState<string>("");
   const [actionPendingId, setActionPendingId] = useState<string | null>(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createDescription, setCreateDescription] = useState("");
+  const [createPriceType, setCreatePriceType] = useState<"free" | "paid">("free");
+  const [createInstructor, setCreateInstructor] = useState("");
+  const [createPublished, setCreatePublished] = useState(false);
+
+  const createCourseMutation = useCreateAdminCourse();
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -61,6 +71,33 @@ export default function CoursesPage() {
       }
     : undefined;
 
+  async function handleCreateSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!createTitle.trim()) return;
+
+    try {
+      const price = createPriceType === "free" ? 0 : 1;
+
+      await createCourseMutation.mutateAsync({
+        title: createTitle.trim(),
+        description: createDescription.trim() || undefined,
+        price,
+        instructor: createInstructor.trim() || undefined,
+        published: createPublished,
+      });
+      setCreateOpen(false);
+      setCreateTitle("");
+      setCreateDescription("");
+      setCreatePriceType("free");
+      setCreateInstructor("");
+      setCreatePublished(false);
+      toastSuccess("Course created");
+      setQuery((prev) => ({ ...prev }));
+    } catch {
+      toastError("Failed to create course");
+    }
+  }
+
   async function togglePublished(course: CourseAdmin) {
     try {
       setActionPendingId(course._id);
@@ -95,6 +132,9 @@ export default function CoursesPage() {
             <h1 className="text-lg font-semibold">Courses</h1>
             <p className="text-xs text-slate-500">Manage courses, modules, and enrollment.</p>
           </div>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            Create course
+          </Button>
         </div>
 
         <Card className="rounded-2xl border bg-white">
@@ -416,6 +456,90 @@ export default function CoursesPage() {
             )}
           </CardContent>
         </Card>
+        {createOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-lg">
+              <h2 className="text-sm font-semibold text-slate-900">Create course</h2>
+              <p className="mb-4 mt-1 text-xs text-slate-500">
+                Create a new course from the admin panel.
+              </p>
+              <form className="space-y-3" onSubmit={handleCreateSubmit}>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700">Title</label>
+                  <input
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    value={createTitle}
+                    onChange={(e) => setCreateTitle(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700">Description</label>
+                  <textarea
+                    rows={3}
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    value={createDescription}
+                    onChange={(e) => setCreateDescription(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-slate-700">Pricing</label>
+                    <select
+                      className="w-full rounded-md border px-3 py-2 text-xs"
+                      value={createPriceType}
+                      onChange={(e) => setCreatePriceType(e.target.value as "free" | "paid")}
+                    >
+                      <option value="free">Free course</option>
+                      <option value="paid">Paid course (Gold members only)</option>
+                    </select>
+                    <p className="text-[10px] text-slate-400">
+                      Free courses are open to everyone. Paid courses are available only for gold members.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-slate-700">Instructor ID (optional)</label>
+                    <input
+                      className="w-full rounded-md border px-3 py-2 text-sm"
+                      value={createInstructor}
+                      onChange={(e) => setCreateInstructor(e.target.value)}
+                    />
+                    <p className="text-[10px] text-slate-400">MongoDB user ID of instructor. Can be set later.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="create-course-published"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border"
+                    checked={createPublished}
+                    onChange={(e) => setCreatePublished(e.target.checked)}
+                  />
+                  <label
+                    htmlFor="create-course-published"
+                    className="text-xs font-medium text-slate-700"
+                  >
+                    Publish immediately
+                  </label>
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCreateOpen(false)}
+                    disabled={createCourseMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" disabled={createCourseMutation.isPending}>
+                    {createCourseMutation.isPending ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </ToastProvider>
   );

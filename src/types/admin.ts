@@ -2,11 +2,16 @@ export type RoleEnum = "user" | "partner_request" | "partner" | "admin";
 
 export type StatusEnum = "active" | "pending" | "suspended";
 
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  totalPages: number;
-  totalRecords: number;
+export type MembershipTierEnum = "free" | "gold";
+
+export interface CreateAdminUserPayload {
+  name: string;
+  email?: string;
+  phone?: string;
+  role: RoleEnum;
+  status?: StatusEnum;
+  membershipTier?: MembershipTierEnum;
+  password?: string;
 }
 
 export interface UserAdmin {

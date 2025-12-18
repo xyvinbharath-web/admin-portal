@@ -24,6 +24,9 @@ export interface EventAdmin {
   bookings?: BookingAdmin[];
   bookingsCount?: number;
   status?: EventStatus;
+  bannerUrl?: string;
+  isFree?: boolean;
+  price?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -64,4 +67,19 @@ export async function updateAdminEvent(
 
 export async function deleteAdminEvent(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/admin/events/${id}`);
+}
+
+export interface CreateAdminEventPayload {
+  title: string;
+  description?: string;
+  date: string;
+  capacity?: number;
+  isFree?: boolean;
+  price?: number;
+  bannerUrl?: string;
+}
+
+export async function createAdminEvent(payload: CreateAdminEventPayload): Promise<EventAdmin> {
+  const response = await apiClient.post("/api/v1/events", payload);
+  return response.data.data;
 }

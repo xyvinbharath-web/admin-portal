@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { uploadAdminAvatar } from "@/services/admin/uploads";
 import { updateRoleSchema, updateStatusSchema } from "@/validators/adminUserClientSchemas";
 import { toastError, toastSuccess } from "@/lib/toast";
 
@@ -14,15 +15,20 @@ interface UserDetailCardProps {
   onUpdateRole: (role: RoleEnum) => Promise<unknown>;
   onUpdateStatus: (status: StatusEnum) => Promise<unknown>;
   onUpdateMembership?: (tier: string) => Promise<unknown>;
+  onUpdateProfile?: (payload: Partial<Pick<UserAdmin, "name" | "email" | "phone" | "avatar">>) => Promise<unknown>;
   rolePending?: boolean;
   statusPending?: boolean;
   membershipPending?: boolean;
+  profilePending?: boolean;
 }
 
-export function UserDetailCard({ user, onUpdateRole, onUpdateStatus, onUpdateMembership, rolePending, statusPending, membershipPending }: UserDetailCardProps) {
+export function UserDetailCard({ user, onUpdateRole, onUpdateStatus, onUpdateMembership, onUpdateProfile, rolePending, statusPending, membershipPending, profilePending }: UserDetailCardProps) {
   const [role, setRole] = useState<RoleEnum>(user.role);
   const [status, setStatus] = useState<StatusEnum>(user.status);
   const [membershipTier, setMembershipTier] = useState<string>(user.membershipTier ?? "free");
+  const [profileName, setProfileName] = useState<string>(user.name);
+  const [profileEmail, setProfileEmail] = useState<string>(user.email);
+  const [profilePhone, setProfilePhone] = useState<string>(user.phone ?? "");
 
   // Keep local state in sync with latest user data (after mutations/refetches)
   useEffect(() => {
@@ -37,7 +43,36 @@ export function UserDetailCard({ user, onUpdateRole, onUpdateStatus, onUpdateMem
     setMembershipTier(user.membershipTier ?? "free");
   }, [user.membershipTier]);
 
+  useEffect(() => {
+    setProfileName(user.name);
+    setProfileEmail(user.email);
+    setProfilePhone(user.phone ?? "");
+  }, [user.name, user.email, user.phone]);
+
   const initials = user.name?.[0]?.toUpperCase() ?? "U";
+
+  async function handleSaveProfile() {
+    if (!onUpdateProfile) return;
+    const payload: Partial<Pick<UserAdmin, "name" | "email" | "phone">> = {
+      name: profileName.trim(),
+      email: profileEmail.trim(),
+      phone: profilePhone.trim() || undefined,
+    };
+    await onUpdateProfile(payload);
+  }
+
+  async function handleRemoveAvatar() {
+    if (!onUpdateProfile) return;
+    await onUpdateProfile({ avatar: "" });
+  }
+
+  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!onUpdateProfile) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadAdminAvatar(file);
+    await onUpdateProfile({ avatar: url });
+  }
 
   async function handleSaveRole() {
     const parsed = updateRoleSchema.safeParse({ role });
@@ -72,20 +107,67 @@ export function UserDetailCard({ user, onUpdateRole, onUpdateStatus, onUpdateMem
   return (
     <Card className="rounded-2xl border bg-white">
       <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-start">
-        <div className="flex items-center gap-4 md:w-1/3">
-          <Avatar className="h-16 w-16">
-            {user.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar} alt={user.name} className="h-16 w-16 rounded-full object-cover" />
-            ) : (
-              <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
+        <div className="flex items-start gap-4 md:w-1/3">
+          <div className="flex flex-col items-center gap-2">
+            <Avatar className="h-16 w-16">
+              {user.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar} alt={user.name} className="h-16 w-16 rounded-full object-cover" />
+              ) : (
+                <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
+              )}
+            </Avatar>
+            {onUpdateProfile && user.avatar && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-[11px] text-slate-500"
+                onClick={handleRemoveAvatar}
+                disabled={profilePending}
+              >
+                Remove photo
+              </Button>
             )}
-          </Avatar>
-          <div>
-            <div className="text-lg font-semibold text-slate-900">{user.name}</div>
-            <div className="text-sm text-slate-600">{user.email}</div>
-            {user.phone && <div className="text-xs text-slate-500">{user.phone}</div>}
-            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+          </div>
+          <div className="flex-1 space-y-2">
+            <div>
+              <div className="text-xs font-medium text-slate-500">Name</div>
+              {onUpdateProfile ? (
+                <input
+                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                />
+              ) : (
+                <div className="text-lg font-semibold text-slate-900">{user.name}</div>
+              )}
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-500">Email</div>
+              {onUpdateProfile ? (
+                <input
+                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm"
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                />
+              ) : (
+                <div className="text-sm text-slate-600">{user.email}</div>
+              )}
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-500">Phone</div>
+              {onUpdateProfile ? (
+                <input
+                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm"
+                  value={profilePhone}
+                  onChange={(e) => setProfilePhone(e.target.value)}
+                />
+              ) : (
+                user.phone && <div className="text-xs text-slate-500">{user.phone}</div>
+              )}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-2 text-xs">
               <Badge variant="outline" className="capitalize">
                 {user.role}
               </Badge>
@@ -93,6 +175,30 @@ export function UserDetailCard({ user, onUpdateRole, onUpdateStatus, onUpdateMem
                 {user.status}
               </Badge>
             </div>
+            {onUpdateProfile && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                <label className="inline-flex cursor-pointer items-center rounded-md border px-2 py-1">
+                  <span>Change photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarFileChange}
+                  />
+                </label>
+              </div>
+            )}
+            {onUpdateProfile && (
+              <div className="mt-2 flex justify-start">
+                <Button
+                  size="sm"
+                  onClick={handleSaveProfile}
+                  disabled={profilePending || !profileName.trim()}
+                >
+                  {profilePending ? "Saving..." : "Save profile"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -16,6 +16,9 @@ export function useAdminAuditLogs(initialQuery?: AdminAuditLogsQuery) {
   const { data, isLoading, isError, error, refetch } = useQuery<PaginatedAuditLogsResponse>({
     queryKey: ["admin-audit-logs", query],
     queryFn: () => getAdminAuditLogs(query),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   return {

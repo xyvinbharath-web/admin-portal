@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UserAdmin, RoleEnum, StatusEnum } from "@/types/admin";
-import { getAdminUser, patchAdminUserRole, patchAdminUserStatus, patchAdminUserMembership, deleteAdminUser } from "@/services/admin/users";
+import { getAdminUser, patchAdminUserRole, patchAdminUserStatus, patchAdminUserMembership, deleteAdminUser, adminUpdateUserProfile, type AdminUpdateUserProfilePayload } from "@/services/admin/users";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 export function useAdminUser(id: string | undefined) {
@@ -12,6 +12,18 @@ export function useAdminUser(id: string | undefined) {
     queryKey: ["admin", "users", id],
     queryFn: () => (id ? getAdminUser(id) : Promise.reject(new Error("Missing id"))),
     enabled: !!id,
+  });
+
+  const profileMutation = useMutation({
+    mutationFn: (payload: AdminUpdateUserProfilePayload) => adminUpdateUserProfile(id as string, payload),
+    onSuccess: (updated: UserAdmin) => {
+      toastSuccess("Profile updated");
+      queryClient.setQueryData(["admin", "users", id], updated);
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+    onError: (err: any) => {
+      toastError(err?.response?.data?.message || "Failed to update profile");
+    },
   });
 
   const roleMutation = useMutation({
@@ -66,10 +78,12 @@ export function useAdminUser(id: string | undefined) {
     updateRole: roleMutation.mutateAsync,
     updateStatus: statusMutation.mutateAsync,
     updateMembership: membershipMutation.mutateAsync,
+    updateProfile: profileMutation.mutateAsync,
     deleteUser: deleteMutation.mutateAsync,
     rolePending: roleMutation.isPending,
     statusPending: statusMutation.isPending,
     membershipPending: membershipMutation.isPending,
+    profilePending: profileMutation.isPending,
     deletePending: deleteMutation.isPending,
   };
 }

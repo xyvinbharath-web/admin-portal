@@ -28,6 +28,14 @@ export interface CoursesQueryParams {
   instructor?: string;
 }
 
+export interface CreateAdminCoursePayload {
+  title: string;
+  description?: string;
+  price?: number;
+  instructor?: string;
+  published?: boolean;
+}
+
 export async function getAdminCourses(params: CoursesQueryParams): Promise<PaginatedResponse<CourseAdmin>> {
   const res = await apiClient.get("/api/v1/admin/courses", {
     params: {
@@ -50,6 +58,11 @@ export async function getPartnerCourses(partnerId: string): Promise<CourseAdmin[
 
 export async function getAdminCourse(courseId: string): Promise<CourseAdmin> {
   const res = await apiClient.get("/api/v1/admin/courses/" + courseId);
+  return res.data.data as CourseAdmin;
+}
+
+export async function createAdminCourse(payload: CreateAdminCoursePayload): Promise<CourseAdmin> {
+  const res = await apiClient.post("/api/v1/admin/courses", payload);
   return res.data.data as CourseAdmin;
 }
 

@@ -1,5 +1,5 @@
 import apiClient from "@/lib/apiClient";
-import type { PaginatedResponse, UserAdmin, RoleEnum, StatusEnum } from "@/types/admin";
+import type { PaginatedResponse, UserAdmin, RoleEnum, StatusEnum, CreateAdminUserPayload } from "@/types/admin";
 
 interface UsersQueryParams {
   page?: number;
@@ -25,6 +25,18 @@ export async function getAdminUsers(params: UsersQueryParams): Promise<Paginated
 
 export async function getAdminUser(id: string): Promise<UserAdmin> {
   const res = await apiClient.get<Wrapper<UserAdmin>>(`/api/v1/admin/users/${id}`);
+  return res.data.data;
+}
+
+export async function createAdminUser(payload: CreateAdminUserPayload): Promise<UserAdmin> {
+  const res = await apiClient.post<Wrapper<UserAdmin>>("/api/v1/admin/users", payload);
+  return res.data.data;
+}
+
+export type AdminUpdateUserProfilePayload = Partial<Pick<UserAdmin, "name" | "email" | "phone" | "avatar">>;
+
+export async function adminUpdateUserProfile(id: string, payload: AdminUpdateUserProfilePayload): Promise<UserAdmin> {
+  const res = await apiClient.patch<Wrapper<UserAdmin>>(`/api/v1/admin/users/${id}/profile`, payload);
   return res.data.data;
 }
 

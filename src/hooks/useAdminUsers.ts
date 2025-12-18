@@ -22,6 +22,9 @@ export function useAdminUsers(initial: UsersQueryParams = { page: 1, limit: 10 }
     queryFn: () => getAdminUsers(query),
     // React Query v5: use placeholderData helper instead of keepPreviousData
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   function setQuery(updater: (prev: UsersQueryParams) => UsersQueryParams) {
